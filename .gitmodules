@@ -1,0 +1,9 @@
+[submodule "vendor/github.com/codegangsta/cli"]
+	path = vendor/github.com/codegangsta/cli
+	url = https://github.com/codegangsta/cli
+[submodule "vendor/github.com/google/gopacket"]
+	path = vendor/github.com/google/gopacket
+	url = https://github.com/google/gopacket
+[submodule "vendor/pkg.deepin.io/lib"]
+	path = vendor/pkg.deepin.io/lib
+	url = https://github.com/linuxdeepin/go-lib
