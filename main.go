@@ -16,7 +16,17 @@ import (
 	"time"
 )
 
-func RawRecord(socat_arg1 string, input string) (chan *dbus.Message, error) {
+func RawRecord(bus_addr string, input string) (chan *dbus.Message, error) {
+	var socat_arg1 string
+	switch bus_addr {
+	case "user", "session":
+		socat_arg1 = "EXEC:'dbus-monitor --session --pcap'"
+	case "system":
+		socat_arg1 = "EXEC:'dbus-monitor --system --pcap'"
+	default:
+		socat_arg1 = fmt.Sprintf("EXEC:\"dbus-monitor --addr='%s' --pcap\"", bus_addr)
+	}
+
 	switch input {
 	case "auto-socat":
 		input = fmt.Sprintf("%s/dbus-profiler.%d", os.TempDir(), os.Getpid())
@@ -87,37 +97,27 @@ func main() {
 			Usage: "the address to bind for serving, [127.0.0.1:8080|auto]",
 			Value: "auto",
 		},
+		cli.BoolFlag{
+			Name:   "debug",
+			Hidden: true,
+		},
 	}
 	app.Action = func(c *cli.Context) error {
-		var conn *dbus.Conn
-		var socat_arg1 string
-		var err error
-		switch bus_addr := c.GlobalString("address"); bus_addr {
-		case "user", "session":
-			conn, err = dbus.SessionBus()
-			socat_arg1 = "EXEC:'dbus-monitor --session --pcap'"
-		case "system":
-			conn, err = dbus.SystemBus()
-			socat_arg1 = "EXEC:'dbus-monitor --system --pcap'"
-		default:
-			conn, err = dbus.Dial(bus_addr)
-			socat_arg1 = fmt.Sprintf("EXEC:\"dbus-monitor --addr='%s' --pcap\"", bus_addr)
-		}
+		bus_addr := c.GlobalString("address")
+
+		ch, err := RawRecord(bus_addr, c.GlobalString("input"))
 		if err != nil {
 			return err
 		}
 
-		ch, err := RawRecord(socat_arg1, c.GlobalString("input"))
+		db, err := NewDatabase(bus_addr, ch)
 		if err != nil {
 			return err
 		}
 
-		db, err := NewDatabase(conn, ch)
-		if err != nil {
-			return err
-		}
-
-		err = StartServer(db, c.GlobalString("bind"))
+		s := NewServer(db, c.GlobalString("bind"))
+		s.OpenBrowser()
+		s.Run(c.GlobalBool("debug"))
 		if err != nil {
 			return err
 		}

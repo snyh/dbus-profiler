@@ -1,53 +1,55 @@
-var values = [0,1,2,3,4,5,6,7,8,9,2,3,4,5,5,5,5,5,1,1,7,7,7,6,4,8];
 
-var width = 960,
-    height = 500,
-    padding=6;
 
-var x = d3.scale.linear()
-    .domain([0, 10])
-    .range([0, width/2]);
-var data = d3.layout.histogram()
-  	.bins(5)
-(values);
+function tick() {
+    d3.json("/dbus/api/main", function(error, json) {
+        if (error)
+            return console.log(json);
+        draw(json);
+    });
+}
 
-var xAxis = d3.svg.axis()
-    .scale(x)
-    .orient("bottom");
+//setInterval(tick, 5000);
+var chart = d3.select('#chart')
+    .append('svg')
+    .attr('width', 1920)
+    .attr('height', 1080);
 
-var y = d3.scale.linear()
-    .domain([0, 10])
-    .range([height, 0]) ;
-var yAxis = d3.svg.axis()
-    .scale(y)
-    .orient("left");
-var svg = d3.select("body").append("svg")
-    .attr("width", width+30)
-    .attr("height", height+30)
-    .append("g")
-    .attr("transform", "translate(" + padding*4 + "," + padding + ")");
+function draw(data) {
+    var fill = d3.scale.category20();
+    min = d3.min(data, function(d) { return d.Cost; });
+    max = d3.max(data, function(d) { return d.Cost; });
 
-var bar = svg.selectAll(".bar")
-    .data(data)
-    .enter().append("g")
-    .attr("class", "bar")
-    .attr("transform", function(d,i) { return "translate(" + x(i*2) + "," + y(d.y) + ")"; });
-bar.append("rect")
- 	.attr("x",padding)
-    .attr("width", x(data[0].dx))
-    .attr("height", function(d) { return height - y(d.y); });
-bar.append("text")
-    .attr("dy", ".75em")
-    .attr("y", 6)
-    .attr("x", x(data[0].dx) / 2)
-    .attr("text-anchor", "middle")
-    .text(function(d) { return d.y; })
-    .attr("fill", "#fff");
-svg.append("g")
-    .attr("class", "x axis")
-    .attr("transform", "translate("+padding+"," + height + ")")
-    .call(xAxis);
-svg.append("g")
-    .attr("class", "y axis")
-    .attr("transform", "translate("+padding+"," + 0 + ")")
-    .call(yAxis);
+    var x = d3.scale.linear()
+        .range([0, 1000])
+        .domain([min, max]);
+
+    var iHeight = 40;
+
+    chart.selectAll('g').remove();
+    
+    var group = chart.selectAll('g').data(data);
+    
+    enter = group.enter().append('g');
+
+    enter.append('rect')
+        .attr('class', 'item')
+        .attr('transform', function(d, i) { return "translate(0," + i * iHeight +")"; })
+        .style({'fill':'blue', 'stroke':'black'})
+        .attr('width', function(d) {
+            return x(d.Cost);
+        })
+        .attr('height', iHeight)
+
+
+    enter.append('text')
+        .attr('class', 'item')
+        .attr('transform', function(d,i) { return "translate(0," + i * iHeight +")"; })
+        .text(function(d) {
+            return "" + d.Ifc + "(" + d.RCs.length + ")";
+        });
+
+    group.exit().remove();
+}
+
+setInterval(tick, 1000);
+tick();

@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+  <head>
+    <script src = "./js/lib/angular.min.js"> </script>
+    <script src = "./js/lib/d3.min.js"></script>
+    <script src = "./js/lib/d3-tip.js"></script>
+    
+    <script src = "./js/controller.js"></script>
+    <link rel="stylesheet" href="./css/header.css">
+    <title>dbus-profiler</title>
+  </head>
+  
+  <body ng-app="dbus-profiler">
+    <div id="header" ng-controller="HeaderCtrl">
+      Bus Address:<span>  {{info.BusAddr}} </span> </br>
+      We already profiling <span>{{info.Duration / 1000 / 1000 / 1000 | number:0 }}s</span> from LaunchTime: <time> {{info.LaunchTimestamp | date: 'medium'}} </time> </br>
+      There have <span>{{info.N}}</span> calls, and they total cost: <span> {{info.Cost/1000/1000.0 | number:3 }}ms </span> </br>
+    </div>
+    
+    <hr>
+    
+    <div id="chart">
+    </div>
+    
+    <!--build:js js/main.min.js -->
+    <script src = "./js/main.js"></script>
+    <!-- endbuild -->
+  </body>
+</html>
