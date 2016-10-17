@@ -95,7 +95,7 @@ func main() {
 		cli.StringFlag{
 			Name:  "bind",
 			Usage: "the address to bind for serving, [127.0.0.1:8080|auto]",
-			Value: "auto",
+			Value: ":7799",
 		},
 		cli.BoolFlag{
 			Name:   "debug",

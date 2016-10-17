@@ -28,12 +28,11 @@ func (r RecordGroup) Swap(i, j int) { r.RCs[i], r.RCs[j] = r.RCs[j], r.RCs[i] }
 func (r RecordGroup) Sort(s SortBy) {
 	switch s {
 	case SortByCost:
-		sort.Sort(RecordGroupSortByCost{r})
+		sort.Sort(&RecordGroupSortByCost{r})
 	case SortByName:
-		sort.Sort(RecordGroupSortByName{r})
+		sort.Sort(&RecordGroupSortByName{r})
 	}
 }
-
 func (r RecordGroupSortByCost) Less(i, j int) bool {
 	oi, oj := r.RCs[i], r.RCs[j]
 	return oi.EndAt.Sub(oi.StartAt) < oj.EndAt.Sub(oj.StartAt)
@@ -43,24 +42,35 @@ func (r RecordGroupSortByName) Less(i, j int) bool {
 	return oi.Name < oj.Name
 }
 
-func (db *Database) Render(w io.Writer, s SortBy) {
-	var keys []string
-	for k := range db.data {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
+type SortRecordGroup []RecordGroup
 
-	var data []RecordGroup
-	for _, key := range keys {
-		rs := db.data[key]
-		rs.Sort(s)
-		data = append(data, rs)
-	}
+func (rg SortRecordGroup) Len() int           { return len(rg) }
+func (rg SortRecordGroup) Swap(i, j int)      { rg[i], rg[j] = rg[j], rg[i] }
+func (rg SortRecordGroup) Less(i, j int) bool { return rg[i].Cost > rg[j].Cost }
 
-	json.NewEncoder(w).Encode(data)
+func (rg RecordGroup) Since(after time.Time) RecordGroup {
+	var ret = RecordGroup{
+		Cost: rg.Cost,
+		Ifc:  rg.Ifc,
+		RCs:  make([]*Record, 0),
+	}
+	for _, r := range rg.RCs {
+		if r.EndAt.After(after) {
+			ret.RCs = append(ret.RCs, r)
+		}
+	}
+	return ret
 }
 
-type GlobalInfo struct {
+func (db Database) Render(w io.Writer, s SortBy, after time.Duration) {
+	var data SortRecordGroup
+	for _, rg := range db.data {
+		rs := rg.Since(db.launchTimestamp.Add(after))
+		data = append(data, rs)
+	}
+	sort.Sort(data)
+
+	json.NewEncoder(w).Encode(data)
 }
 
 func (db *Database) RenderGlobalInfo(w io.Writer) {

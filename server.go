@@ -38,9 +38,22 @@ func (s *Server) Main(w http.ResponseWriter, r *http.Request) {
 	case "cost":
 		sort = SortByCost
 	}
+
+	var dur time.Duration
+
+	if since := r.URL.Query().Get("since"); since != "" {
+		var err error
+		dur, err = time.ParseDuration(since)
+		if err != nil {
+			http.Error(w, err.Error(), 403)
+			return
+		}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
-	s.db.Render(w, sort)
+
+	s.db.Render(w, sort, dur)
 }
 
 func (s *Server) Info(w http.ResponseWriter, r *http.Request) {
