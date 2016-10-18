@@ -54,13 +54,12 @@ func (rg RecordGroup) Detail(after time.Time, unit time.Duration) RecordDetail {
 	for {
 		before := after.Add(unit)
 		t := rg.reduce(after, before)
-		if len(t.rcs) == 0 {
-			break
-		}
-		after = before
-
 		ret.CallDetail = append(ret.CallDetail, t.CurrentCall())
 		ret.CostDetail = append(ret.CostDetail, t.CurrentCost())
+		after = before
+		if before.After(time.Now()) {
+			break
+		}
 	}
 	return ret
 }

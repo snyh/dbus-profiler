@@ -1,12 +1,15 @@
-var duration = 0
+const leftPadding = 48;
+const bottomPadding = 20;
+const iHeight = 40;
+const MaxSecond = 60;
+
 
 function tick() {
-    d3.json("/dbus/api/main?sort=name&since="+duration+"s", function(error, data) {
+    d3.json(format("/dbus/api/main?sort=name&since={}s", MaxSecond), function(error, data) {
         if (error)
             return console.log(error);
         render(data, 1400, 760);
     });
-    duration += 1
 }
 setInterval(tick, 1000);
 tick();
@@ -15,10 +18,6 @@ var chart = d3.select('#chart')
     .append('svg')
     .attr('height', '100%')
     .attr('width', '100%')
-
-const leftPadding = 48;
-const bottomPadding = 20;
-const iHeight = 40;
 
 
 var tip = d3.tip()
@@ -44,7 +43,7 @@ function render(data, width, height) {
         .domain(data.map(function(o) { return o.Ifc })) 
         .range([0, height-bottomPadding],1,0.5)
     var tlScale = d3.scaleLinear()
-        .domain([0, 60])
+        .domain([0, MaxSecond])
         .range([0, width])
 
 
@@ -65,9 +64,34 @@ function render(data, width, height) {
     
     var group = chart.selectAll('.item').data(data);
 
-    enter = group.enter().append('g').attr('class', 'item')        .on('mouseover', tip.show)
+
+    lineFunc = d3.line().curve(d3.curveMonotoneX)
+        .x(function(d) { return d.x })
+        .y(function(d) { return d.y })
+    
+    enter = group.enter().append('g').attr('class', 'item')
+        .on('mouseover', tip.show)
         .on('mouseout', tip.hide)
 
+    enter.append('path')
+        .attr('d', function (d, i) {
+            var ret = [];
+            base = yPosition(i, 0)
+            console.log(d)
+            d.CostDetail.forEach(function(e, index) {
+                ret.push({
+                    "x":  tlScale(index),
+                    "y":  base + x(e)
+                })
+            })
+            return lineFunc(ret)
+        })
+        .style(
+            {
+                "stroke": "blue",
+                "fill": "black"
+            }
+        );
 
     enter.append('rect')
         .attr('height', iHeight/2)
