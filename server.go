@@ -70,9 +70,9 @@ func ResourceBundle(dir string, debug bool) http.Handler {
 		if url == "" {
 			url = "index.html"
 		}
-		data, err := frontend.Asset(r.URL.Path)
+		data, err := frontend.Asset(url)
 		if err != nil {
-			fmt.Fprintf(w, "ERR: %v\n", err)
+			fmt.Fprintf(w, "ERR: %v for fetch %q\n", err, url)
 			return
 		}
 		w.Write(data)
