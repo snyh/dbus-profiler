@@ -15,70 +15,100 @@ const (
 )
 
 type RecordGroup struct {
-	Ifc  string
-	RCs  []*Record
-	Cost time.Duration
+	Ifc       string
+	TotalCost time.Duration
+	TotalCall int
+	rcs       []*Record
 }
 
-type RecordGroupSortByCost struct{ RecordGroup }
-type RecordGroupSortByName struct{ RecordGroup }
-
-func (r RecordGroup) Len() int      { return len(r.RCs) }
-func (r RecordGroup) Swap(i, j int) { r.RCs[i], r.RCs[j] = r.RCs[j], r.RCs[i] }
-func (r RecordGroup) Sort(s SortBy) {
-	switch s {
-	case SortByCost:
-		sort.Sort(&RecordGroupSortByCost{r})
-	case SortByName:
-		sort.Sort(&RecordGroupSortByName{r})
-	}
-}
-func (r RecordGroupSortByCost) Less(i, j int) bool {
-	oi, oj := r.RCs[i], r.RCs[j]
-	return oi.EndAt.Sub(oi.StartAt) < oj.EndAt.Sub(oj.StartAt)
-}
-func (r RecordGroupSortByName) Less(i, j int) bool {
-	oi, oj := r.RCs[i], r.RCs[j]
-	return oi.Name < oj.Name
-}
-
-type SortRecordGroup []RecordGroup
+type SortRecordGroup []RecordDetail
 
 func (rg SortRecordGroup) Len() int           { return len(rg) }
 func (rg SortRecordGroup) Swap(i, j int)      { rg[i], rg[j] = rg[j], rg[i] }
-func (rg SortRecordGroup) Less(i, j int) bool { return rg[i].Cost > rg[j].Cost }
+func (rg SortRecordGroup) Less(i, j int) bool { return rg[i].TotalCost > rg[j].TotalCost }
 
-func (rg RecordGroup) Since(after time.Time) RecordGroup {
+func (rg RecordGroup) reduce(after time.Time, before time.Time) RecordGroup {
 	var ret = RecordGroup{
-		Cost: rg.Cost,
-		Ifc:  rg.Ifc,
-		RCs:  make([]*Record, 0),
+		TotalCost: rg.TotalCost,
+		TotalCall: rg.TotalCall,
+		Ifc:       rg.Ifc,
+		rcs:       make([]*Record, 0),
 	}
-	for _, r := range rg.RCs {
-		if r.EndAt.After(after) {
-			ret.RCs = append(ret.RCs, r)
+	for _, r := range rg.rcs {
+		if r.StartAt.After(after) && r.StartAt.Before(before) {
+			ret.rcs = append(ret.rcs, r)
 		}
 	}
 	return ret
 }
 
-func (db Database) Render(w io.Writer, s SortBy, after time.Duration) {
-	var data SortRecordGroup
-	for _, rg := range db.data {
-		rs := rg.Since(db.launchTimestamp.Add(after))
-		data = append(data, rs)
+func (rg RecordGroup) Detail(after time.Time, unit time.Duration) RecordDetail {
+	var ret = RecordDetail{
+		Ifc:        rg.Ifc,
+		TotalCost:  rg.TotalCost,
+		TotalCall:  rg.TotalCall,
+		CallDetail: make([]int, 0),
+		CostDetail: make([]time.Duration, 0),
 	}
-	sort.Sort(data)
 
-	json.NewEncoder(w).Encode(data)
+	for {
+		before := after.Add(unit)
+		t := rg.reduce(after, before)
+		if len(t.rcs) == 0 {
+			break
+		}
+		after = before
+
+		ret.CallDetail = append(ret.CallDetail, t.CurrentCall())
+		ret.CostDetail = append(ret.CostDetail, t.CurrentCost())
+	}
+	return ret
+}
+
+func (rg RecordGroup) CurrentCall() int {
+	return len(rg.rcs)
+}
+func (rg RecordGroup) CurrentCost() time.Duration {
+	var c time.Duration
+	for _, rc := range rg.rcs {
+		c += rc.Cost
+	}
+	return c
+}
+
+type RecordDetail struct {
+	Ifc        string
+	TotalCost  time.Duration
+	TotalCall  int
+	CostDetail []time.Duration
+	CallDetail []int
+}
+
+func (db Database) Render(w io.Writer, s SortBy, last time.Duration) {
+	ts := db.launchTimestamp
+
+	since := time.Since(db.launchTimestamp)
+
+	if since > last {
+		ts = db.launchTimestamp.Add(since - last)
+	}
+
+	var ret []RecordDetail
+	for _, rg := range db.data {
+		ret = append(ret, rg.Detail(ts, time.Second))
+	}
+
+	sort.Sort(SortRecordGroup(ret))
+
+	json.NewEncoder(w).Encode(ret)
 }
 
 func (db *Database) RenderGlobalInfo(w io.Writer) {
 	var n int
 	var cost time.Duration
 	for _, rg := range db.data {
-		n += len(rg.RCs)
-		cost += rg.Cost
+		n += len(rg.rcs)
+		cost += rg.TotalCost
 	}
 	json.NewEncoder(w).Encode(
 		struct {

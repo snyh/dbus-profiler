@@ -1,7 +1,7 @@
 var duration = 0
 
 function tick() {
-    d3.json("/dbus/api/main?sort=cost&since="+duration+"s", function(error, data) {
+    d3.json("/dbus/api/main?sort=name&since="+duration+"s", function(error, data) {
         if (error)
             return console.log(error);
         render(data, 1400, 760);
@@ -25,7 +25,7 @@ var tip = d3.tip()
     .attr('class', 'd3-tip')
     .offset([iHeight /2, 500])
     .html(function(d) {
-        var c = format("total call ({}) , cost {}ms", d.RCs.length, (d.Cost/1000/1000.0));
+        var c = format("total call ({}) , cost {}ms", d.TotalCall, (d.TotalCost/1000/1000.0));
         return format("<span style='color:red'>{}</span>", c)
     })
 
@@ -34,8 +34,8 @@ chart.call(tip);
 function render(data, width, height) {
     
     var fill = d3.schemaCategory20c;
-    min = d3.min(data, function(d) { return d.Cost; });
-    max = d3.max(data, function(d) { return d.Cost; });
+    min = d3.min(data, function(d) { return d.TotalCost; });
+    max = d3.max(data, function(d) { return d.TotalCost; });
 
     var x = d3.scaleLinear()
         .range([0, height])
@@ -73,7 +73,7 @@ function render(data, width, height) {
         .attr('height', iHeight/2)
         .attr('transform', function(d, i) { return format("translate({},{})", leftPadding+1, yPosition(i,0)); })
         .attr('width', function(d) {
-            return x(d.Cost);
+            return x(d.TotalCost);
         })
         .style('fill', 'rgba(0,200,10,0.6)').style('stroke', 'black')
 

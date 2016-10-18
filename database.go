@@ -15,7 +15,7 @@ type Record struct {
 	Serial uint32
 
 	StartAt time.Time
-	EndAt   time.Time
+	Cost    time.Duration
 }
 
 type Database struct {
@@ -81,11 +81,17 @@ func (d Database) QueryCaller(sender uint32) string {
 	}
 }
 
+func (rg *RecordGroup) Add(rc *Record) {
+	rg.rcs = append(rg.rcs, rc)
+	rg.TotalCost += rc.Cost
+	rg.TotalCall += 1
+}
+
 func (d Database) AddRecord(rc *Record) {
 	if rc.Ifc == "org.freedesktop.DBus" {
 		return
 	}
-	rc.EndAt = time.Now()
+	rc.Cost = time.Since(rc.StartAt)
 	d.Lock()
 
 	ifc := rc.Ifc
@@ -94,8 +100,7 @@ func (d Database) AddRecord(rc *Record) {
 	if !ok {
 		r.Ifc = ifc
 	}
-	r.RCs = append(r.RCs, rc)
-	r.Cost += rc.EndAt.Sub(rc.StartAt)
+	r.Add(rc)
 
 	d.data[ifc] = r
 	d.Unlock()
