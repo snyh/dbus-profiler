@@ -77,10 +77,10 @@ func ResourceBundle(dir string, debug bool) http.Handler {
 	})
 }
 
-func (s *Server) RenderInterface(w http.ResponseWriter, r *http.Request) {
+func (s *Server) RenderInterfaceDetail(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	name := query.Get("name")
-	err := s.db.RenderInterface(name, w)
+	err := s.db.RenderInterfaceDetail(name, w)
 	if err != nil {
 		fmt.Fprintf(w, "ERR: %v for fetch %q\n", err, name)
 	}
@@ -90,7 +90,7 @@ func (s *Server) Run(debug bool) error {
 	http.Handle("/static/", http.StripPrefix("/static/", ResourceBundle("./frontend", debug)))
 	http.HandleFunc("/dbus/api/main", s.Main)
 	http.HandleFunc("/dbus/api/info", s.Info)
-	http.HandleFunc("/dbus/api/interface", s.RenderInterface)
+	http.HandleFunc("/dbus/api/interface", s.RenderInterfaceDetail)
 	return http.Serve(s.listener, nil)
 }
 

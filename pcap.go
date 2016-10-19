@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"pkg.deepin.io/lib/dbus"
-	"strings"
 	"sync"
 	"time"
 )
@@ -167,7 +166,7 @@ func (s *pcapSource) handleInput(msg *dbus.Message) error {
 }
 
 func (s *pcapSource) send(rc *Record) {
-	if strings.HasPrefix(rc.Ifc, "org.freedesktop.DBus.") {
+	if rc.Ifc == "org.freedesktop.DBus" {
 		return
 	}
 

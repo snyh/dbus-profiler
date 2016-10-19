@@ -15,6 +15,84 @@ const (
 	SortByName
 )
 
+type RecordSummary struct {
+	Ifc       string
+	TotalCost time.Duration
+	TotalCall int
+
+	CostDetail []time.Duration
+	CallDetail []int
+}
+
+type CallUsageSummary struct {
+	Total int
+	Cost  []time.Duration
+}
+
+type RecordDetail struct {
+	Ifc       string
+	TotalCost time.Duration
+	TotalCall int
+
+	Method   map[string]CallUsageSummary
+	Signal   map[string]CallUsageSummary
+	Property map[string]CallUsageSummary
+}
+
+func calcUsage(v []*Record) CallUsageSummary {
+	if len(v) == 0 {
+		panic("Zero v in calcUsage")
+	}
+
+	cost := make([]time.Duration, 0)
+	if v[0].Type != TypeSignal {
+		for _, rc := range v {
+			cost = append(cost, rc.Cost)
+		}
+	}
+	return CallUsageSummary{
+		Cost:  cost,
+		Total: len(v),
+	}
+}
+
+func (rg RecordGroup) Detail() RecordDetail {
+	mcache := make(map[string][]*Record)
+	scache := make(map[string][]*Record)
+	pcache := make(map[string][]*Record)
+
+	for _, rc := range rg.rcs {
+		switch rc.Type {
+		case TypeMethodCall:
+			mcache[rc.Name] = append(mcache[rc.Name], rc)
+		case TypeSignal:
+			scache[rc.Name] = append(scache[rc.Name], rc)
+		case TypePropertyGet, TypePropertySet:
+			pcache[rc.Name] = append(pcache[rc.Name], rc)
+		}
+	}
+	//TODO: Move the logic of above in RecordGroup and Database.AddRecord
+
+	ret := RecordDetail{
+		Ifc:       rg.Ifc,
+		TotalCost: rg.TotalCost,
+		TotalCall: rg.TotalCall,
+		Method:    make(map[string]CallUsageSummary),
+		Signal:    make(map[string]CallUsageSummary),
+		Property:  make(map[string]CallUsageSummary),
+	}
+	for n, v := range mcache {
+		ret.Method[n] = calcUsage(v)
+	}
+	for n, v := range scache {
+		ret.Signal[n] = calcUsage(v)
+	}
+	for n, v := range pcache {
+		ret.Property[n] = calcUsage(v)
+	}
+	return ret
+}
+
 type RecordGroup struct {
 	Ifc       string
 	TotalCost time.Duration
@@ -22,7 +100,7 @@ type RecordGroup struct {
 	rcs       []*Record
 }
 
-type SortRecordGroup []RecordDetail
+type SortRecordGroup []RecordSummary
 
 func (rg SortRecordGroup) Len() int           { return len(rg) }
 func (rg SortRecordGroup) Swap(i, j int)      { rg[i], rg[j] = rg[j], rg[i] }
@@ -43,8 +121,8 @@ func (rg RecordGroup) reduce(after time.Time, before time.Time) RecordGroup {
 	return ret
 }
 
-func (rg RecordGroup) Detail(after time.Time, unit time.Duration) RecordDetail {
-	var ret = RecordDetail{
+func (rg RecordGroup) Summary(after time.Time, unit time.Duration) RecordSummary {
+	var ret = RecordSummary{
 		Ifc:        rg.Ifc,
 		TotalCost:  rg.TotalCost,
 		TotalCall:  rg.TotalCall,
@@ -76,14 +154,6 @@ func (rg RecordGroup) CurrentCost() time.Duration {
 	return c
 }
 
-type RecordDetail struct {
-	Ifc        string
-	TotalCost  time.Duration
-	TotalCall  int
-	CostDetail []time.Duration
-	CallDetail []int
-}
-
 func (db *Database) Render(w io.Writer, top int, last time.Duration) {
 	ts := db.launchTimestamp
 
@@ -93,9 +163,9 @@ func (db *Database) Render(w io.Writer, top int, last time.Duration) {
 		ts = db.launchTimestamp.Add(since - last)
 	}
 
-	var ret []RecordDetail
+	var ret []RecordSummary
 	for _, rg := range db.data {
-		ret = append(ret, rg.Detail(ts, time.Second))
+		ret = append(ret, rg.Summary(ts, time.Second))
 	}
 
 	sort.Sort(SortRecordGroup(ret))
@@ -106,13 +176,12 @@ func (db *Database) Render(w io.Writer, top int, last time.Duration) {
 	json.NewEncoder(w).Encode(ret)
 }
 
-func (db *Database) RenderInterface(name string, w io.Writer) error {
+func (db *Database) RenderInterfaceDetail(name string, w io.Writer) error {
 	v, ok := db.data[name]
 	if !ok {
 		return fmt.Errorf("There hasn't any record for %s", name)
 	}
-
-	return json.NewEncoder(w).Encode(v)
+	return json.NewEncoder(w).Encode(v.Detail())
 }
 
 func (db *Database) RenderGlobalInfo(w io.Writer) {
