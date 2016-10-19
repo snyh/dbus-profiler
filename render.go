@@ -84,7 +84,7 @@ type RecordDetail struct {
 	CallDetail []int
 }
 
-func (db Database) Render(w io.Writer, top int, last time.Duration) {
+func (db *Database) Render(w io.Writer, top int, last time.Duration) {
 	ts := db.launchTimestamp
 
 	since := time.Since(db.launchTimestamp)
@@ -111,6 +111,7 @@ func (db *Database) RenderInterface(name string, w io.Writer) error {
 	if !ok {
 		return fmt.Errorf("There hasn't any record for %s", name)
 	}
+
 	return json.NewEncoder(w).Encode(v)
 }
 
@@ -128,6 +129,12 @@ func (db *Database) RenderGlobalInfo(w io.Writer) {
 			LaunchTimestamp time.Time
 			BusAddr         string
 			Duration        time.Duration
-		}{cost, n, db.launchTimestamp, db.busAddr, time.Since(db.launchTimestamp)},
+		}{cost, n, db.launchTimestamp, "user", time.Since(db.launchTimestamp)},
 	)
+}
+
+func (rg *RecordGroup) Add(rc *Record) {
+	rg.rcs = append(rg.rcs, rc)
+	rg.TotalCost += rc.Cost
+	rg.TotalCall += 1
 }
