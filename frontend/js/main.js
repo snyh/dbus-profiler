@@ -1,18 +1,34 @@
 const leftPadding = 48;
-const bottomPadding = 20;
-const iHeight = 40;
+const bottomPadding = 48;
 const MaxSecond = 60;
+const MaxServer = 10;
+var numberServer = 0;
 
+var iHeight = 40;
+var yPosition;
 
 function tick() {
-    d3.json(format("/dbus/api/main?sort=name&since={}s", MaxSecond), function(error, data) {
+    d3.json(format("/dbus/api/main?top={}&since={}s", MaxServer, MaxSecond), function(error, data) {
         if (error)
             return console.log(error);
-        render(data, 1400, 760);
+        
+        var width = header.clientWidth;
+        var height =  document.body.clientHeight - header.clientHeight;
+        
+        if (numberServer != data.length) {
+            numberServer = data.length
+            iHeight = height / (numberServer) - 10
+            
+            yPosition = d3.scaleLinear()
+                .domain([0, numberServer])
+                .range([0, height-bottomPadding],1,0.5)
+        }
+        render(data, width, height);
     });
 }
 setInterval(tick, 1000);
 tick();
+window.onresize = tick;
 
 var chart = d3.select('#chart')
     .append('svg')
@@ -30,83 +46,91 @@ var tip = d3.tip()
 
 chart.call(tip);
 
-function render(data, width, height) {
+function renderAix(data, width, height) {
+    var nameScale = d3.scaleBand()
+        .domain(data.map(function(d) { return d.Ifc })) 
+        .range([0, height-bottomPadding],1,0.5)
     
-    var fill = d3.schemaCategory20c;
+    var tlScale = d3.scaleLinear()
+        .domain([0, MaxSecond])
+        .range([0, width])
+    
+    chart.selectAll('.aix').remove();
+    
+    chart.append('g').call(d3.axisLeft(nameScale))
+        .classed('aix', true)
+        .attr('transform', format('translate({}, 0)', leftPadding))
+    
+    chart.append('g').call(d3.axisBottom(tlScale))
+        .classed('aix', true)
+        .attr('transform', format("translate(48, {})", height-bottomPadding));
+}
+
+
+function renderPath(data, width, height) {
+    var min = d3.min(data, function(d) { return d.TotalCost; });
+    var max = d3.max(data, function(d) { return d.TotalCost; });
+
+
+    var tlScale = d3.scaleLinear()
+        .domain([0, MaxSecond])
+        .range([bottomPadding ,width-leftPadding])
+
+    chart.selectAll("path").remove()
+    chart.selectAll(".item path").data(data.map(function(d){return d.CostDetail;}))
+        .enter().append('path')
+        .attr('d', function(d, i) {
+            var fn = d3.line().curve(d3.curveBasis)
+                .x(function(d, j) { return width - tlScale(j) })
+                .y(function(d, j) {
+                    var y = d3.scaleLinear()
+                        .domain([0, 1000 * 1000* 10])
+                        .range([bottomPadding, height])
+                    return height - y(d)
+                })
+            return fn(d)
+        })
+        .attr('stroke', function(d, i) { return d3.schemeCategory10[i] })
+        .attr('stroke-width', 3)
+        .attr('fill', 'none')
+ }
+
+function render(data, width, height) {
     min = d3.min(data, function(d) { return d.TotalCost; });
     max = d3.max(data, function(d) { return d.TotalCost; });
 
     var x = d3.scaleLinear()
-        .range([0, height])
-        .domain([min, max]);
-    var nameScale = d3.scaleBand()
-        .domain(data.map(function(o) { return o.Ifc })) 
-        .range([0, height-bottomPadding],1,0.5)
-    var tlScale = d3.scaleLinear()
-        .domain([0, MaxSecond])
-        .range([0, width])
-
-
-    var yPosition = function(i, offset) {
-        return i*iHeight + offset
-    }
-
-    chart.selectAll('.item').remove();
-    chart.selectAll('.aix').remove();
+        .domain([min, max])
+        .range([10, height]);
     
-    chart.append('g').call(d3.axisLeft(nameScale)).
-        attr("class", "aix").
-        attr('transform', format('translate({}, 0)', leftPadding))
-    chart.append('g').call(d3.axisBottom(tlScale)).
-        attr("class", "aix").
-        attr('transform', format("translate(48, {})", height-bottomPadding));
-    
-    
+    chart.selectAll('.item').remove();    
+
     var group = chart.selectAll('.item').data(data);
 
-
-    lineFunc = d3.line().curve(d3.curveMonotoneX)
-        .x(function(d) { return d.x })
-        .y(function(d) { return d.y })
-    
-    enter = group.enter().append('g').attr('class', 'item')
+    enter = group.enter().append('g')
+        .classed('item', true)
         .on('mouseover', tip.show)
         .on('mouseout', tip.hide)
 
-    enter.append('path')
-        .attr('d', function (d, i) {
-            var ret = [];
-            base = yPosition(i, 0)
-            console.log(d)
-            d.CostDetail.forEach(function(e, index) {
-                ret.push({
-                    "x":  tlScale(index),
-                    "y":  base + x(e)
-                })
-            })
-            return lineFunc(ret)
-        })
-        .style(
-            {
-                "stroke": "blue",
-                "fill": "black"
-            }
-        );
+
 
     enter.append('rect')
         .attr('height', iHeight/2)
-        .attr('transform', function(d, i) { return format("translate({},{})", leftPadding+1, yPosition(i,0)); })
+        .attr('transform', function(d, i) { return format("translate({},{})", leftPadding, yPosition(i)+iHeight/3.0) })
         .attr('width', function(d) {
             return x(d.TotalCost);
         })
         .style('fill', 'rgba(0,200,10,0.6)').style('stroke', 'black')
 
     enter.append('text')
-        .attr('transform', function(d, i) { return format("translate(100,{})", yPosition(i,15)); })
+        .attr('transform', function(d, i) { return format("translate(100,{})", yPosition(i) -25) })
         .text(function(d) {
-            return d.Ifc
+            return format("{} total call ({}) , cost {}ms", d.Ifc, d.TotalCall, (d.TotalCost/1000/1000.0));
         });
 
     group.exit().remove();
+
+    renderAix(data, width, height)
+    renderPath(data, width, height)
 }
 

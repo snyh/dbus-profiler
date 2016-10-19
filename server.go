@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/snyh/dbus-profiler/frontend"
+	"strconv"
 )
 
 type Server struct {
@@ -31,12 +32,9 @@ func NewServer(db *Database, addr string) *Server {
 }
 
 func (s *Server) Main(w http.ResponseWriter, r *http.Request) {
-	var sort SortBy
-	switch r.URL.Query().Get("sort") {
-	case "name":
-		sort = SortByName
-	case "cost":
-		sort = SortByCost
+	top, _ := strconv.ParseInt(r.URL.Query().Get("top"), 0, 8)
+	if top == 0 {
+		top = 20
 	}
 
 	var dur time.Duration
@@ -53,7 +51,7 @@ func (s *Server) Main(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
-	s.db.Render(w, sort, dur)
+	s.db.Render(w, int(top), dur)
 }
 
 func (s *Server) Info(w http.ResponseWriter, r *http.Request) {

@@ -2,23 +2,34 @@ body {
     margin:0px;
     padding:0px;
 }
-
 #container {
     padding:1px;
     height: calc(100vh - 10px);
     /* display:flex; */
     /* flex-direction: column; */
 }
-#container #header {
+
+
+#header {
     max-heigth: 45px;
     felx:1;
 }
-#container #chart {
-    flex: 1 0px;
-    width: 100%;
-    height: calc(100% - 45px);
-}
-
 #header span,time {
     color: green;
 }
+
+
+#content {
+    display:flex;
+    height: calc(100% - 45px);
+}
+#detail {
+    width: 30%;
+    background: rgba(0, 200, 0, 0.1);
+    margin: 5px;
+}
+
+#chart {
+    width: 70%;;
+}
+

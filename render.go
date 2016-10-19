@@ -83,7 +83,7 @@ type RecordDetail struct {
 	CallDetail []int
 }
 
-func (db Database) Render(w io.Writer, s SortBy, last time.Duration) {
+func (db Database) Render(w io.Writer, top int, last time.Duration) {
 	ts := db.launchTimestamp
 
 	since := time.Since(db.launchTimestamp)
@@ -99,6 +99,9 @@ func (db Database) Render(w io.Writer, s SortBy, last time.Duration) {
 
 	sort.Sort(SortRecordGroup(ret))
 
+	if top < len(ret) {
+		ret = ret[0:top]
+	}
 	json.NewEncoder(w).Encode(ret)
 }
 

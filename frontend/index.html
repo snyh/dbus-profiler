@@ -21,9 +21,22 @@
         There have <span>{{info.N}}</span> calls, and they total cost: <span> {{info.Cost/1000/1000.0 | number:3 }}ms </span> </br>
       </div>
       <hr>
-    
-      <div id="chart">
+
+      <div id="content">
+        
+        <div id="chart">        </div>
+
+        <div id="detail" ng-controller="DetailCtrl">
+          <div id="ifc_detail">
+            Name: {{IfcName}} <br>
+            TotalCall: {{TotalCall}} <br>
+            TotalCost: {{TotalCost}} <br>
+          </div>
+          <div id="method_detail"></div>
+        </div>
+        
       </div>
+      
     </div>
     
     <!--build:js js/main.min.js -->

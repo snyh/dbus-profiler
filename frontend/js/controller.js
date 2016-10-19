@@ -7,3 +7,7 @@ app.controller('HeaderCtrl', function($scope, $http) {
         });
     }, 1000);
 });
+
+
+app.controller('DetailCtrl', function($scope,$http) {
+});
