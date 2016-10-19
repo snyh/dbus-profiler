@@ -98,8 +98,12 @@ func main() {
 			Value: ":7799",
 		},
 		cli.BoolFlag{
-			Name:   "debug",
+			Name:   "debug,d",
 			Hidden: true,
+		},
+		cli.BoolFlag{
+			Name:  "quiet,q",
+			Usage: "disable auto launch web browser",
 		},
 	}
 	app.Action = func(c *cli.Context) error {
@@ -116,7 +120,7 @@ func main() {
 		}
 
 		s := NewServer(db, c.GlobalString("bind"))
-		s.OpenBrowser()
+		s.OpenBrowser(c.GlobalBool("quiet"))
 		s.Run(c.GlobalBool("debug"))
 		if err != nil {
 			return err

@@ -77,15 +77,29 @@ func ResourceBundle(dir string, debug bool) http.Handler {
 	})
 }
 
+func (s *Server) RenderInterface(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	name := query.Get("name")
+	err := s.db.RenderInterface(name, w)
+	if err != nil {
+		fmt.Fprintf(w, "ERR: %v for fetch %q\n", err, name)
+	}
+}
+
 func (s *Server) Run(debug bool) error {
 	http.Handle("/static/", http.StripPrefix("/static/", ResourceBundle("./frontend", debug)))
 	http.HandleFunc("/dbus/api/main", s.Main)
 	http.HandleFunc("/dbus/api/info", s.Info)
+	http.HandleFunc("/dbus/api/interface", s.RenderInterface)
 	return http.Serve(s.listener, nil)
 }
 
-func (s *Server) OpenBrowser() {
+func (s *Server) OpenBrowser(auto bool) {
 	url := fmt.Sprintf("http://%s/static/index.html", s.listener.Addr())
+	if auto {
+		fmt.Printf("Auto open page disabled \nPlease visit %q manually\n", url)
+		return
+	}
 	if err := exec.Command("xdg-open", url).Run(); err != nil {
 		fmt.Printf("Auto open page failed: %v \nPlease visit %q manually\n", err, url)
 	}

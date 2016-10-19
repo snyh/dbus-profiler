@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"sort"
 	"time"
@@ -103,6 +104,14 @@ func (db Database) Render(w io.Writer, top int, last time.Duration) {
 		ret = ret[0:top]
 	}
 	json.NewEncoder(w).Encode(ret)
+}
+
+func (db *Database) RenderInterface(name string, w io.Writer) error {
+	v, ok := db.data[name]
+	if !ok {
+		return fmt.Errorf("There hasn't any record for %s", name)
+	}
+	return json.NewEncoder(w).Encode(v)
 }
 
 func (db *Database) RenderGlobalInfo(w io.Writer) {
