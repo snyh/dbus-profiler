@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/snyh/dbus-profiler/frontend"
+	"mime"
+	"path"
 	"strconv"
 )
 
@@ -68,6 +70,7 @@ func ResourceBundle(dir string, debug bool) http.Handler {
 		if url == "" {
 			url = "index.html"
 		}
+		w.Header().Add("Content-Type", mime.TypeByExtension(path.Ext(url)))
 		data, err := frontend.Asset(url)
 		if err != nil {
 			fmt.Fprintf(w, "ERR: %v for fetch %q\n", err, url)
