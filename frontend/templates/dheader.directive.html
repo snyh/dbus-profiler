@@ -1,0 +1,11 @@
+<div class="alert alert-info">
+    <style>
+     d-header span,time {
+         color: green;
+     }
+    </style>
+    
+    Bus Address:<span>  {{info.BusAddr}} </span>
+    We have already record <span>{{info.Duration / 1000 / 1000 / 1000 | number:0 }}s</span> from LaunchTime: <time> {{info.LaunchTimestamp | date: 'medium'}} </time>
+    There have <span>{{info.N}}</span> calls, and they total cost: <span> {{info.Cost/1000/1000.0 | number:3 }}ms </span> </br>
+</div>

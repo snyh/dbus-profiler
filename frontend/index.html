@@ -9,67 +9,24 @@
     <script src = "./js/lib/string-format.js"></script>
 
     <link rel="stylesheet" href="./css/lib/bootstrap.min.css">
-    <link rel="stylesheet" href="./css/header.css">
     <title>dbus-profiler</title>
   </head>
   
   <body>
+    <div class="container" ng-controller="mainCtrl">
+      <d-header> </d-header>
 
-    <div id="container" class="container">
-      <div id="header" ng-controller="HeaderCtrl"  class="alert alert-info">
-        Bus Address:<span>  {{info.BusAddr}} </span>
-        We have already record <span>{{info.Duration / 1000 / 1000 / 1000 | number:0 }}s</span> from LaunchTime: <time> {{info.LaunchTimestamp | date: 'medium'}} </time>
-        There have <span>{{info.N}}</span> calls, and they total cost: <span> {{info.Cost/1000/1000.0 | number:3 }}ms </span> </br>
-      </div>
-
-      <div id="content">
-        
-        <div id="chart" ng-controller="SummaryCtrl">
-          <svg width="100%" height="100%"></svg>
-        </div>
-
-        <div id="detail" ng-controller="DetailCtrl" ng-show="IfcName != ''">
-          <div id="ifc_detail">
-            <p>Name: {{info.Ifc}} </p>
-            <p>TotalCall: {{info.TotalCall}} </p>
-            <p>TotalCost: {{info.TotalCost/100/1000 | number:3}}ms </p>
-          </div>
-
-          <div id="method_detail">
-            <table st-table="data" class="table table-striped" st-safe-src="rows">
-              <thead>
-              <tr>
-                <th st-sort="name">Name</th>
-                <th st-sort="type">Type</th>
-                <th st-sort="call">Call</th>
-                <th st-sort="cost">Cost</th>
-              </thead>
-
-              <tbody>
-              <tr ng-repeat="row in data" ng-click="switchMethod(row.name)">
-                <td>{{row.name}}</td>
-                <td>{{row.type}}</td>
-                <td>{{row.call | percentage: info.TotalCall:2}}</td>
-                <td>{{row.cost | percentage: info.TotalCost:2}}</td>
-              </tr>
-              </tbody>
-            </table>
-
-            <div id="method_detail_chart">
-              {{detailName}}
-              <svg>
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
+      <d-summary> </d-summary>
       
+      <d-interface ifc-name="{{ifcName}}"> </d-interface>
     </div>
     
-    <!--build:js js/main.min.js -->
-    <script src = "./js/draw_detail.js"></script>
-    <script src = "./js/controller.js"></script>
-    <script src = "./js/main.js"></script>
+    <!--build:js js/dbus-profiler.js -->
+    <script src = "./js/app.js"></script>
+    <script src = "./js/dinterface.directive.js"></script>
+    <script src = "./js/dheader.directive.js"></script>
+    <script src = "./js/dsummary.directive.js"></script>
+    <script src = "./js/filter.js"></script>
     <!-- endbuild -->
   </body>
 </html>

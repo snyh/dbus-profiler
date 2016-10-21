@@ -10,5 +10,5 @@ gulp.task('default', ['bindata'], function() {
 })
 
 gulp.task("bindata", shell.task(
-    "go-bindata -pkg frontend js/... css/... index.html"
+    "go-bindata -pkg frontend js/... css/... templates/... index.html"
 ))

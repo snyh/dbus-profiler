@@ -1,0 +1,42 @@
+<div>
+    <style>
+     d-interface .st-sort-ascent:before{
+         content: '\25B2';
+     }
+
+     d-interface .st-sort-descent:before{
+         content: '\25BC';
+     }
+    </style>
+
+    <div>
+        <p>Name: {{info.Ifc}} </p>
+        <p>TotalCall: {{info.TotalCall}} </p>
+        <p>TotalCost: {{info.TotalCost/100/1000 | number:3}}ms </p>
+    </div>
+
+    <div id="method_detail">
+        <table st-table="data" class="table table-striped" st-safe-src="rows">
+            <thead>
+                <tr>
+                    <th st-sort="name">Name</th>
+                    <th st-sort="type">Type</th>
+                    <th st-sort="call">Call</th>
+                    <th st-sort="cost">Cost</th>
+            </thead>
+
+            <tbody>
+                <tr ng-repeat="row in data" ng-click="switchM(row.name)">
+                    <td>{{row.name}}</td>
+                    <td>{{row.type}}</td>
+                    <td>{{row.call | percentage: info.TotalCall:2}}</td>
+                    <td>{{row.cost | percentage: info.TotalCost:2}}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="dinterface_chart_container">
+            {{detailName}}
+        </div>
+    </div>
+</div>
