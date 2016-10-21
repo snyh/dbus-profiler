@@ -33,3 +33,23 @@ body {
     width: 70%;;
 }
 
+#method_detail_chart {
+    width:100%;
+    height:100%;
+    padding:auto;
+    margin:auto;
+    align:center;
+    
+}
+#method_detail_chart svg {
+    width: 250px;
+    height: 200px;
+}
+
+.st-sort-ascent:before{
+    content: '\25B2';
+  }
+
+  .st-sort-descent:before{
+    content: '\25BC';
+  }

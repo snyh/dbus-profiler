@@ -6,6 +6,7 @@
   "author": "xiabin@deepin.com",
   "dependencies": {
     "angular": "^1.5.8",
+    "bootstrap": "^3.3.7",
     "d3": "4.2.7",
     "d3-tip": "^0.7.1",
     "printf": "^0.2.5"

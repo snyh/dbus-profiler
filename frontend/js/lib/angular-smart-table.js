@@ -1,0 +1,1 @@
+../../node_modules/angular-smart-table/dist/smart-table.js
