@@ -1,16 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"github.com/snyh/dbus-profiler/frontend"
 	"net"
 	"net/http"
 	"os/exec"
-	"time"
-
-	"github.com/snyh/dbus-profiler/frontend"
-	"mime"
-	"path"
 	"strconv"
+	"time"
 )
 
 type Server struct {
@@ -70,13 +68,18 @@ func ResourceBundle(dir string, debug bool) http.Handler {
 		if url == "" {
 			url = "index.html"
 		}
-		w.Header().Add("Content-Type", mime.TypeByExtension(path.Ext(url)))
+		info, err := frontend.AssetInfo(url)
+		if err != nil {
+			fmt.Fprintf(w, "ERR: %v for fetch %q\n", err, url)
+		}
 		data, err := frontend.Asset(url)
 		if err != nil {
 			fmt.Fprintf(w, "ERR: %v for fetch %q\n", err, url)
 			return
 		}
-		w.Write(data)
+
+		buf := bytes.NewReader(data)
+		http.ServeContent(w, r, info.Name(), info.ModTime(), buf)
 	})
 }
 
