@@ -1,13 +1,6 @@
 <!doctype html>
-<html ng-app="dbus-profiler">
+<html ng-app="dbus-profiler" ng-strict-di>
   <head>
-    <script src = "./js/lib/angular.js"> </script>
-    <script src = "./js/lib/angular-smart-table.js"></script>
-    
-    <script src = "./js/lib/d3.min.js"></script>
-    <script src = "./js/lib/d3-shape.min.js"></script>
-    <script src = "./js/lib/string-format.js"></script>
-
     <link rel="stylesheet" href="./css/lib/bootstrap.min.css">
     <title>dbus-profiler</title>
   </head>
@@ -20,7 +13,17 @@
       
       <d-interface ifc-name="{{ifcName}}"> </d-interface>
     </div>
+
+
+
+
+    <script src = "./js/lib/angular.js"> </script>
+    <script src = "./js/lib/angular-smart-table.js"></script>
     
+    <script src = "./js/lib/d3.min.js"></script>
+    <script src = "./js/lib/d3-shape.min.js"></script>
+    <script src = "./js/lib/string-format.js"></script>
+
     <!--build:js js/dbus-profiler.js -->
     <script src = "./js/app.js"></script>
     <script src = "./js/dinterface.directive.js"></script>

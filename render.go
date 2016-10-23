@@ -164,9 +164,11 @@ func (db *Database) Render(w io.Writer, top int, last time.Duration) {
 	}
 
 	var ret []RecordSummary
+	db.RLock()
 	for _, rg := range db.data {
 		ret = append(ret, rg.Summary(ts, time.Second))
 	}
+	db.RUnlock()
 
 	sort.Sort(SortRecordGroup(ret))
 
@@ -177,7 +179,9 @@ func (db *Database) Render(w io.Writer, top int, last time.Duration) {
 }
 
 func (db *Database) RenderInterfaceDetail(name string, w io.Writer) error {
+	db.RLock()
 	v, ok := db.data[name]
+	db.RUnlock()
 	if !ok {
 		return fmt.Errorf("There hasn't any record for %s", name)
 	}
@@ -187,10 +191,12 @@ func (db *Database) RenderInterfaceDetail(name string, w io.Writer) error {
 func (db *Database) RenderGlobalInfo(w io.Writer) {
 	var n int
 	var cost time.Duration
+	db.RLock()
 	for _, rg := range db.data {
 		n += len(rg.rcs)
 		cost += rg.TotalCost
 	}
+	db.RUnlock()
 	json.NewEncoder(w).Encode(
 		struct {
 			Cost            time.Duration

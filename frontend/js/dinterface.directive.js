@@ -1,10 +1,9 @@
-'use strict';
-
 (function(){
+    'use strict';
     angular.module('dbus-profiler')
         .directive('ifcName', function() {
             return {
-                controller: function($scope) {}
+                controller: ['$scope', function($scope) {}]
             }
         })
         .directive('dInterface', function() {
