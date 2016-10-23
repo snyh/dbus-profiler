@@ -24,6 +24,10 @@
         setInterval(scope.update, 1000)
         scope.update()
 
+        scope.$watch('ifcName', function(newVal) {
+            if (newVal)
+                scope.getData(newVal);
+        })
         scope.$watch('detailName', function(newVal) {
             if (scope.info && newVal) {
                 var v = scope.info.Method[newVal]
@@ -33,7 +37,7 @@
             }
         })
     }
-    
+
     function ic($scope, dapi) {
         $scope.switchM = function(n) {
             $scope.detailName = n
@@ -41,7 +45,7 @@
         $scope.update = function() {
             $scope.getData($scope.ifcName || "org.freedesktop.DBus")
         }
-        
+
         $scope.getData = function(name) {
             dapi.get("/interface?name="+name, function(data) {
                 var rows = []
@@ -54,36 +58,36 @@
                 angular.forEach(data.Signal, function(v, name) {
                     rows.push({name:name, type:"S", call: v.Total, cost: 0});
                 })
-                
+
                 $scope.rows = rows;
                 $scope.info = data
             });
         }
     }
-    
+
    function draw_detail(root, data, opts)
     {
         var width = opts.width || 200,
             height = opts.height || 250,
             leftPadding = opts.leftPadding || 30,
             bottomPadding = opts.bottomPadding || 25;
-        
+
         var svg = d3.select(root)
             .append("svg")
             .attr('width', width)
             .attr('height', height)
             .append('g')
             .attr('transform', format("translate({}, {})", leftPadding, bottomPadding));
-        
+
         svg.selectAll("*").remove();
-        
-                    
+
+
         var max_height = height - leftPadding;
         var max_width = width - bottomPadding;
 
         var total = data.length
         var hist = d3.histogram()
-        
+
 
         var y = d3.scaleLinear()
             .range([0, max_height])
@@ -91,7 +95,7 @@
         var yTick = d3.scaleLinear()
             .range([0, data.length])
             .domain(0, max_height)
-        
+
         var x = d3.scaleLinear()
             .domain(d3.extent(data))
             .range([0,max_width])
@@ -116,6 +120,6 @@
 
         update.exit().remove()
 
-        return;    
+        return;
     }
 })()

@@ -3,7 +3,6 @@
     angular.module('dbus-profiler')
         .directive('dSummary', function() {
             return {
-                scope: {},
                 restrict: 'EA',
                 link: link,
                 controller: ['$scope', 'dapi', cc],
@@ -15,7 +14,7 @@
             if (newVal) {
                 var root = iElement[0]
                 root.innerHTML = ""
-                render(root, newVal, iAttrs)
+                render(scope, root, newVal, iAttrs)
             }
         })
         window.onresize = scope.tick;
@@ -41,7 +40,7 @@
     const MaxServer = 10;
     var numberServer = 0;
 
-    function render(root, data, opts) {
+    function render(scope, root, data, opts) {
         var width = opts.width || 800,
             height = opts.height || 600;
 
@@ -70,12 +69,8 @@
 
         var enter = group.enter().append('g')
             .classed('item', true)
-            .on("click", function(d) {
-                scope.$apply(
-                    function() {
-                        SwitchInterface(d.Ifc)
-                    }
-                )
+            .on("click", function(d, i, ele) {
+                    scope.switchIfc(d.Ifc)
             })
 
         enter.append('rect')
@@ -88,6 +83,7 @@
 
         enter.append('text')
             .attr('transform', function(d, i) { return format("translate(100,{})", yPosition(i) -25) })
+            .attr('fill', function(d, i) { return d3.schemeCategory10[i] })
             .text(function(d) {
                 return format("{} total call ({}) , cost {}ms", d.Ifc, d.TotalCall, (d.TotalCost/1000/1000.0));
             });
@@ -95,13 +91,13 @@
         group.exit().remove();
 
         renderAix(svg, data, width, height)
-        renderPath(svg, data, width, height)
+        renderPath(scope.ifcName, svg, data, width, height)
     }
 
     function renderAix(svg, data, width, height) {
-        var nameScale = d3.scaleBand()
-            .domain(data.map(function(d) { return d.Ifc }))
-            .range([0, height-bottomPadding],1,0.5)
+        var yScale = d3.scaleLinear()
+            .domain([50, 0])
+            .range([0, height-bottomPadding])
 
         var tlScale = d3.scaleLinear()
             .domain([0, MaxSecond])
@@ -109,7 +105,7 @@
 
         svg.selectAll('.aix').remove();
 
-        svg.append('g').call(d3.axisLeft(nameScale))
+        svg.append('g').call(d3.axisLeft(yScale))
             .classed('aix', true)
             .attr('transform', format('translate({}, 0)', leftPadding))
 
@@ -119,29 +115,27 @@
     }
 
 
-    function renderPath(svg, data, width, height) {
-        var min = d3.min(data, function(d) { return d.TotalCost; });
-        var max = d3.max(data, function(d) { return d.TotalCost; });
-
-
+    function renderPath(ifcName, svg, rawdata, width, height) {
         var tlScale = d3.scaleLinear()
             .domain([0, MaxSecond])
             .range([bottomPadding ,width-leftPadding])
 
-        svg.selectAll("path").remove()
-        svg.selectAll(".item path").data(data.map(function(d){return d.CostDetail;}))
-            .enter().append('path')
-            .attr('d', function(d, i) {
-                var fn = d3.line().curve(d3.curveBasis)
-                    .x(function(d, j) { return width - tlScale(j) })
-                    .y(function(d, j) {
-                        var y = d3.scaleLinear()
-                            .domain([0, 1000 * 1000* 10])
-                            .range([bottomPadding, height])
-                        return height - y(d)
-                    })
-                return fn(d)
+        var data = rawdata.map(function(d){return d.CostDetail;})
+
+        var y = d3.scaleLinear()
+            .domain([0, 1000*1000*1000])
+            .range([bottomPadding, height])
+
+        var fn = d3.line().curve(d3.curveBasis)
+            .x(function(d, j) { return width - tlScale(j) })
+            .y(function(d, j) {
+                return height - y(d)
             })
+
+        svg.selectAll("path").remove()
+        svg.selectAll(".item path").data(data)
+            .enter().append('path')
+            .attr('d', fn)
             .attr('stroke', function(d, i) { return d3.schemeCategory10[i] })
             .attr('stroke-width', 3)
             .attr('fill', 'none')
