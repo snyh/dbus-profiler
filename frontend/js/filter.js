@@ -1,6 +1,5 @@
-'use strict';
-
 (function() {
+    'use strict';
     angular.module('dbus-profiler')
         .filter('sum', function() {
             return function(d) {

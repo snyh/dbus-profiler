@@ -1,7 +1,7 @@
+(function() {
+    'use strict';
 
-var haha;
-
-angular.module('dbus-profiler', ['smart-table'])
-    .controller('mainCtrl', ['$compile', function($compile) {
-        haha = $compile;
-    }])
+    angular.module('dbus-profiler', ['smart-table'])
+        .controller('mainCtrl', function() {
+        })
+})()

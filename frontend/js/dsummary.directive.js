@@ -1,16 +1,15 @@
-'use strict';
-
 (function() {
+    'use strict';
     angular.module('dbus-profiler')
         .directive('dSummary', function() {
             return {
                 scope: {},
                 restrict: 'EA',
                 link: link,
-                controller: ['$scope', cc], 
+                controller: ['$scope', 'dapi', cc],
             }
         });
-    
+
     function link(scope, iElement, iAttrs) {
         scope.$watch("data", function(newVal) {
             if (newVal) {
@@ -23,7 +22,7 @@
         setInterval(scope.tick, 1000);
         scope.tick()
     }
-    
+
     function cc(scope) {
         scope.tick = function() {
             d3.json(format("/dbus/api/main?top={}&since={}s", MaxServer, MaxSecond), function(error, data) {
@@ -33,7 +32,7 @@
             });
         }
     }
-    
+
     var yPosition;
     var iHeight = 40;
     const leftPadding = 48;
@@ -45,11 +44,11 @@
     function render(root, data, opts) {
         var width = opts.width || 800,
             height = opts.height || 600;
-        
+
         if (numberServer != data.length) {
             numberServer = data.length
             iHeight = height / (numberServer) - 10
-            
+
             yPosition = d3.scaleLinear()
                 .domain([0, numberServer])
                 .range([0, height-bottomPadding],1,0.5)
@@ -65,7 +64,7 @@
             .attr('height', height)
             .append('g')
 
-        svg.selectAll("*").remove();        
+        svg.selectAll("*").remove();
 
         var group = svg.selectAll('.item').data(data);
 
@@ -101,19 +100,19 @@
 
     function renderAix(svg, data, width, height) {
         var nameScale = d3.scaleBand()
-            .domain(data.map(function(d) { return d.Ifc })) 
+            .domain(data.map(function(d) { return d.Ifc }))
             .range([0, height-bottomPadding],1,0.5)
-        
+
         var tlScale = d3.scaleLinear()
             .domain([0, MaxSecond])
             .range([0, width])
-        
+
         svg.selectAll('.aix').remove();
-        
+
         svg.append('g').call(d3.axisLeft(nameScale))
             .classed('aix', true)
             .attr('transform', format('translate({}, 0)', leftPadding))
-        
+
         svg.append('g').call(d3.axisBottom(tlScale))
             .classed('aix', true)
             .attr('transform', format("translate(48, {})", height-bottomPadding));

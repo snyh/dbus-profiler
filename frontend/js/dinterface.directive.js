@@ -15,13 +15,12 @@
                 },
                 restrict: 'EA',
                 templateUrl: "templates/dinterface.directive.html",
-                controller: ['$scope', '$http', ic],
+                controller: ['$scope', 'dapi', ic],
                 link: link,
             }
         });
 
     function link(scope, iElement, iAttrs) {
-        console.log("LINK>>>>>>>>>>>>")
         setInterval(scope.update, 1000)
         scope.update()
 
@@ -35,7 +34,7 @@
         })
     }
     
-    function ic($scope, $http) {
+    function ic($scope, dapi) {
         $scope.switchM = function(n) {
             $scope.detailName = n
         }
@@ -44,7 +43,7 @@
         }
         
         $scope.getData = function(name) {
-            $http({method: 'GET', url: '/dbus/api/interface?name='+name}).success(function(data) {
+            dapi.get("/interface?name="+name, function(data) {
                 var rows = []
                 angular.forEach(data.Method, function(v, name) {
                     rows.push({name:name, type:"M", call: v.Total, cost: v.Cost.reduce(function(a, i) { return a + i})});
