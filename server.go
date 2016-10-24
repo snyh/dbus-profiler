@@ -92,11 +92,15 @@ func (s *Server) RenderInterfaceDetail(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *Server) Test(w http.ResponseWriter, r *http.Request) {
+	s.db.Test("org.freedesktop.DBus.Properties", w)
+}
 func (s *Server) Run(debug bool) error {
 	http.Handle("/static/", http.StripPrefix("/static/", ResourceBundle("./frontend", debug)))
 	http.HandleFunc("/dbus/api/main", s.Main)
 	http.HandleFunc("/dbus/api/info", s.Info)
 	http.HandleFunc("/dbus/api/interface", s.RenderInterfaceDetail)
+	http.HandleFunc("/dbus/api/test", s.Test)
 	return http.Serve(s.listener, nil)
 }
 

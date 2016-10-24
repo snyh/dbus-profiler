@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"pkg.deepin.io/lib/dbus"
+	"strings"
 	"sync"
 	"time"
 )
@@ -113,32 +114,50 @@ func initRecord(msg *dbus.Message) *Record {
 	mtype := typeMax
 
 	switch msg.Type {
-	case dbus.TypeMethodCall:
-		mtype = TypeMethodCall
-		switch ifc {
-		case "org.freedesktop.DBus.Properties":
-			ifc, _ = msg.Body[0].(string)
-			switch name {
-			case "Get":
-				name = "Get(" + msg.Body[1].(string) + ")"
-				mtype = TypePropertyGet
-			case "Set":
-				name = "Set(" + msg.Body[1].(string) + ")"
-				mtype = TypePropertySet
-			default:
-				name = "unknown:(" + name + ")"
-			}
-		}
 	case dbus.TypeSignal:
 		mtype = TypeSignal
+	case dbus.TypeMethodCall:
+		mtype = TypeMethodCall
+	default:
+		panic(fmt.Sprintf("Unknown msg: %v", msg))
 	}
-	return &Record{
-		Sender: sender,
-		OPath:  string(opath),
-		Ifc:    ifc,
-		Name:   name,
-		Type:   mtype,
 
+	if ifc == "org.freedesktop.DBus.Properties" {
+		ifc, _ = msg.Body[0].(string)
+		switch name {
+		case "Get":
+			mtype = TypePropertyGet
+			name = "Get(" + msg.Body[1].(string) + ")"
+
+		case "Set":
+			mtype = TypePropertySet
+			name = "Set(" + msg.Body[1].(string) + ")"
+
+		case "GetAll":
+			mtype = TypePropertyGet
+			name = "GETALL"
+		case "PropertiesChanged":
+			mtype = TypePropertyChanged
+			cs, ok := msg.Body[1].(map[string]dbus.Variant)
+			if !ok {
+				fmt.Fprintf(os.Stderr, "invliad ProppertiesChanged msg: %v", msg.Body[1])
+			}
+			var keys []string
+			for k := range cs {
+				keys = append(keys, k)
+			}
+			name = "Change(" + strings.Join(keys, " ") + ")"
+		default:
+			panic("unknown:(" + name + ")")
+		}
+	}
+
+	return &Record{
+		Sender:  sender,
+		OPath:   string(opath),
+		Ifc:     ifc,
+		Name:    name,
+		Type:    mtype,
 		StartAt: time.Now(),
 	}
 }
@@ -166,10 +185,6 @@ func (s *pcapSource) handleInput(msg *dbus.Message) error {
 }
 
 func (s *pcapSource) send(rc *Record) {
-	if rc.Ifc == "org.freedesktop.DBus" {
-		return
-	}
-
 	if !rc.Valid() {
 		panic("Invalid Record")
 	}

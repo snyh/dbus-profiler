@@ -67,7 +67,7 @@ func (rg RecordGroup) Detail() RecordDetail {
 			mcache[rc.Name] = append(mcache[rc.Name], rc)
 		case TypeSignal:
 			scache[rc.Name] = append(scache[rc.Name], rc)
-		case TypePropertyGet, TypePropertySet:
+		case TypePropertyGet, TypePropertySet, TypePropertyChanged:
 			pcache[rc.Name] = append(pcache[rc.Name], rc)
 		}
 	}
@@ -186,6 +186,11 @@ func (db *Database) RenderInterfaceDetail(name string, w io.Writer) error {
 		return fmt.Errorf("There hasn't any record for %s", name)
 	}
 	return json.NewEncoder(w).Encode(v.Detail())
+}
+
+func (db *Database) Test(name string, w io.Writer) {
+	var i interface{} = db.data[name].rcs
+	json.NewEncoder(w).Encode(i)
 }
 
 func (db *Database) RenderGlobalInfo(w io.Writer) {

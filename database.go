@@ -14,6 +14,7 @@ const (
 	TypeSignal
 	TypePropertyGet
 	TypePropertySet
+	TypePropertyChanged
 	typeMax
 )
 
