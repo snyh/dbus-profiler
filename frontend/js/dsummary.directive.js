@@ -27,7 +27,9 @@
             d3.json(format("/dbus/api/main?top={}&since={}s", MaxServer, MaxSecond), function(error, data) {
                 if (error)
                     return console.log(error);
-                scope.data = data;
+                scope.data = data.sort(function(a,b) {
+                    return a.Ifc > b.Ifc
+                });
             });
         }
     }
