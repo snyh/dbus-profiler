@@ -18,8 +18,6 @@
             }
         })
         window.onresize = scope.tick;
-        setInterval(scope.tick, 1000);
-        scope.tick()
     }
 
     function cc(scope) {
@@ -32,28 +30,24 @@
                 });
             });
         }
+        setInterval(scope.tick, 1000);
+        scope.tick()
     }
 
-    var yPosition;
-    var iHeight = 40;
     const leftPadding = 48;
     const bottomPadding = 48;
     const MaxSecond = 60;
     const MaxServer = 10;
-    var numberServer = 0;
 
     function render(scope, root, data, opts) {
         var width = opts.width || 800,
-            height = opts.height || 600;
+            height = opts.height || 600,
+            numberServer = data.length,
+            iHeight = height / numberServer - 10
 
-        if (numberServer != data.length) {
-            numberServer = data.length
-            iHeight = height / (numberServer) - 10
-
-            yPosition = d3.scaleLinear()
-                .domain([0, numberServer])
-                .range([0, height-bottomPadding],1,0.5)
-        }
+        var yPosition = d3.scaleLinear()
+            .domain([0, numberServer])
+            .range([0, height-bottomPadding],1,0.5)
 
         var x = d3.scaleLinear()
             .domain(d3.extent(data.map(function(d){return d.TotalCost})))
@@ -67,9 +61,11 @@
 
         svg.selectAll("*").remove();
 
-        var group = svg.selectAll('.item').data(data);
+        var update = svg.selectAll('.item').data(data);
 
-        var enter = group.enter().append('g')
+        update.exit().remove();
+
+        var enter = update.enter().append('g')
             .classed('item', true)
             .on("click", function(d, i, ele) {
                     scope.switchIfc(d.Ifc)
@@ -81,16 +77,15 @@
             .attr('width', function(d) {
                 return x(d.TotalCost);
             })
-            .style('fill', 'rgba(0,200,10,0.6)').style('stroke', 'black')
+            .attr('fill', function(d, i) { return d3.schemeCategory10[i] })
+            .attr('stroke', "black")
 
         enter.append('text')
-            .attr('transform', function(d, i) { return format("translate(100,{})", yPosition(i) -25) })
-            .attr('fill', function(d, i) { return d3.schemeCategory10[i] })
+            .attr('transform', function(d, i) { return format("translate(100,{})", yPosition(i) + iHeight/3.0 + 16) })
             .text(function(d) {
                 return format("{} total call ({}) , cost {}ms", d.Ifc, d.TotalCall, (d.TotalCost/1000/1000.0));
             });
 
-        group.exit().remove();
 
         renderAix(svg, data, width, height)
         renderPath(scope.ifcName, svg, data, width, height)
@@ -142,6 +137,5 @@
             .attr('stroke-width', 3)
             .attr('fill', 'none')
     }
-
 
 })()
