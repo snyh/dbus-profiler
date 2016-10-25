@@ -85,7 +85,7 @@ func (w *pcapSource) Run() error {
 		r := bytes.NewReader(packet.Data())
 		msg, err := dbus.DecodeMessage(r)
 		if err != nil {
-			fmt.Printf("E: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Run E: %v\n", err)
 			continue
 		}
 		w.handleInput(msg)

@@ -63,8 +63,13 @@ func NewDatabase() *Database {
 	}
 }
 
-func (db *Database) QuerySender(s string) (*SenderInfo, error) {
-	return db.source.QuerySender(s)
+func (db *Database) QuerySender(s string) *SenderInfo {
+	info, err := db.source.QuerySender(s)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "QuerySender E:", err)
+		return NewErrorSenderInfo(s)
+	}
+	return info
 }
 func (db *Database) AddSource(source DatabaseSource) {
 	go func() {

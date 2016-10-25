@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/shirou/gopsutil/process"
+	"os"
 	"pkg.deepin.io/lib/dbus"
 	"time"
 )
@@ -16,7 +17,13 @@ func (d *Introspector) cacheCaller(sender string) (*SenderInfo, error) {
 		if pid == 0 {
 			return nil, fmt.Errorf("GetConnectionUnixProcessFail: %v", err)
 		}
-		return NewSenderInfo(sender, int32(pid))
+		info, err := NewSenderInfo(sender, int32(pid))
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "cacheCaller E:", err, sender)
+			return nil, err
+		}
+		d.callerInfo[sender] = info
+		return info, nil
 	}
 }
 
@@ -32,7 +39,15 @@ type SenderInfo struct {
 	End        time.Time
 }
 
+func NewErrorSenderInfo(sender string) *SenderInfo {
+	return &SenderInfo{
+		Sender: sender,
+		Pid:    -1,
+	}
+}
+
 func NewSenderInfo(sender string, pid int32) (*SenderInfo, error) {
+
 	p, err := process.NewProcess(pid)
 	if err != nil {
 		return nil, fmt.Errorf("NewProcess failed PID:%d E:%v", pid, err)

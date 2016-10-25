@@ -203,10 +203,7 @@ func (db *Database) RenderSender(s string, w io.Writer) error {
 	ss := strings.Split(s, ",")
 	var ret = make([]*SenderInfo, 0)
 	for _, name := range ss {
-		info, err := db.QuerySender(name)
-		if err != nil {
-			return err
-		}
+		info := db.QuerySender(name)
 		ret = append(ret, info)
 	}
 	return json.NewEncoder(w).Encode(ret)
