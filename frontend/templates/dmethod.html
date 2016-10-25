@@ -1,3 +1,23 @@
-<div>
-  1122haha {{$ctrl}}
+<div class="container">
+  <div class="row">
+
+    <div class="col-md-3">
+      <div>
+        name: <span>{{ name }}</span> </br>
+        number of call: {{ total }} </br>
+      </div>
+      <div ng-show="type!='S'">
+        max : {{max | number:2}}ms </br>
+        min: {{min | number:2}}ms </br>
+        mean: {{mean | number:2}}ms </br>
+        median: {{median | number:2}}ms </br>
+        deviation: {{deviation | number:2}} </br>
+      </div>
+    </div>
+
+    <div class="chart col-md-5">
+      chart
+    </div>
+
+  </div>
 </div>

@@ -1,14 +1,6 @@
 
-<div class="d-ifc-list-container">
-    <style>
-     .d-ifc-list-container {
-         display: flex;
-         flex-direction: row;
-     }
-     .d-ifc-list-container
-    </style>
-
-    <div>
+<div class="container">
+    <div class="col-md-4" >
         <table st-table="rows" class="table table-striped" st-safe-src="$ctrl.infos">
             <thead>
                 <tr>
@@ -23,7 +15,7 @@
         </table>
     </div>
 
-    <div>
+    <div class="col-md-8">
         <ui-view>
         </ui-view>
     </div>

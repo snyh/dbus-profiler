@@ -60,6 +60,7 @@
                     return {
                         Ifc: ifcName,
                         Method: methodName,
+                        Type: type,
                         Value: {
                             Total: v.Total,
                             Cost: v.Cost.map(function(d) { return d / 1000 / 1000; })

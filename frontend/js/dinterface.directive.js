@@ -21,12 +21,31 @@
             templateUrl: "templates/dmethod.html",
             controller: ['$scope', '$element', '$attrs', function($scope, $element, $attrs) {
                 var fetchFn = $scope.$ctrl.fetchFn
+                var chart = $element[0].querySelector(".chart")
 
-                var root = $element[0]
+                $scope.$watch('cost', function(newVal) {
+                    if (newVal) {
+                        $scope.max = d3.max(newVal)
+                        $scope.min = d3.min(newVal)
+                        $scope.mean = d3.mean(newVal)
+                        $scope.median = d3.median(newVal)
+                        $scope.deviation = d3.deviation(newVal)
+
+                        if ($scope.type == "S") {
+                            chart.innerHTML = ""
+                        } else {
+                            draw_detail(chart, newVal, $attrs)
+                        }
+                    }
+                })
+
                 var update = function() {
                     fetchFn().then(function(d) {
-                        root.innerHTML = ""
-                        draw_detail(root, d.Value.Cost, $attrs)
+                        $scope.ifc = d.Ifc
+                        $scope.name = d.Method
+                        $scope.type = d.Type
+                        $scope.total = d.Value.Total
+                        $scope.cost = d.Value.Cost
                     })
                 }
                 update()
@@ -36,7 +55,6 @@
 
     function ic($scope, $element, $attrs) {
         var fetchFn = $scope.$ctrl.fetchFn
-        console.log("HHH:", fetchFn)
         $scope.update = function() {
             fetchFn().then(function(data) {
                 var rows = []
@@ -60,6 +78,7 @@
 
     function draw_detail(root, data, opts)
     {
+        root.innerHTML = ""
         var width = opts.width || 200,
             height = opts.height || 250,
             leftPadding = opts.leftPadding || 30,
