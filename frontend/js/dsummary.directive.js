@@ -81,13 +81,13 @@
             });
 
 
-        renderAix(svg, data, width, height)
-        renderPath(scope.ifcName, svg, data, width, height)
+        renderAix(svg, data, width, height, 50)
+        renderPath(scope.ifcName, svg, data, width, height, 50)
     }
 
-    function renderAix(svg, data, width, height) {
+    function renderAix(svg, data, width, height, ms) {
         var yScale = d3.scaleLinear()
-            .domain([50, 0])
+            .domain([ms, 0])
             .range([0, height-bottomPadding])
 
         var tlScale = d3.scaleLinear()
@@ -106,7 +106,7 @@
     }
 
 
-    function renderPath(ifcName, svg, rawdata, width, height) {
+    function renderPath(ifcName, svg, rawdata, width, height, ms) {
         var tlScale = d3.scaleLinear()
             .domain([0, MaxSecond])
             .range([bottomPadding ,width-leftPadding])
@@ -114,7 +114,7 @@
         var data = rawdata.map(function(d){return d.CostDetail;})
 
         var y = d3.scaleLinear()
-            .domain([0, 1000*1000*1000])
+            .domain([0, 1000*1000*ms])
             .range([bottomPadding, height])
 
         var fn = d3.line().curve(d3.curveBasis)
