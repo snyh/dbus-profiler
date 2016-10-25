@@ -113,7 +113,16 @@ func (s *Server) OpenBrowser(auto bool) {
 		fmt.Printf("Auto open page disabled \nPlease visit %q manually\n", url)
 		return
 	}
-	if err := exec.Command("xdg-open", url).Run(); err != nil {
+
+	var cmd *exec.Cmd
+	if bin, err := exec.LookPath("google-chrome"); err == nil {
+		cmd = exec.Command(bin, "--app="+url)
+	} else {
+		cmd = exec.Command("xdg-open", url)
+	}
+
+	if err := cmd.Start(); err != nil {
 		fmt.Printf("Auto open page failed: %v \nPlease visit %q manually\n", err, url)
 	}
+	go cmd.Wait()
 }
