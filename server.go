@@ -96,7 +96,10 @@ func (s *Server) Test(w http.ResponseWriter, r *http.Request) {
 	s.db.Test("org.freedesktop.DBus.Properties", w)
 }
 func (s *Server) Run(debug bool) error {
-	http.Handle("/static/", http.StripPrefix("/static/", ResourceBundle("./frontend", debug)))
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/p/#/", 301)
+	})
+	http.Handle("/p/", http.StripPrefix("/p/", ResourceBundle("./frontend", debug)))
 	http.HandleFunc("/dbus/api/main", s.Main)
 	http.HandleFunc("/dbus/api/info", s.Info)
 	http.HandleFunc("/dbus/api/interface", s.RenderInterfaceDetail)
@@ -105,7 +108,7 @@ func (s *Server) Run(debug bool) error {
 }
 
 func (s *Server) OpenBrowser(auto bool) {
-	url := fmt.Sprintf("http://%s/static/index.html", s.listener.Addr())
+	url := fmt.Sprintf("http://%s", s.listener.Addr())
 	if auto {
 		fmt.Printf("Auto open page disabled \nPlease visit %q manually\n", url)
 		return

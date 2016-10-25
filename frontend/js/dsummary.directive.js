@@ -61,7 +61,7 @@
         update.exit().remove();
 
         var enter = update.enter()
-            .append('a').attr('href', function(d) { return "/static/#/ifcs/" + d.Ifc })
+            .append('a').attr('href', function(d) { return "/p/#/ifcs/" + d.Ifc })
             .append('g')
             .classed('item', true)
 
