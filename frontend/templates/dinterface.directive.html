@@ -9,10 +9,31 @@
     }
   </style>
 
-  <div>
-    <p>Name: {{info.Ifc}} </p>
-    <p>TotalCall: {{info.TotalCall}} </p>
-    <p>TotalCost: {{info.TotalCost/100/1000 | number:3}}ms </p>
+  <div class="row">
+    <div class="col-lg-8">
+      <p>Name: {{info.Ifc}} </p>
+      <p>TotalCall: {{info.TotalCall}} </p>
+      <p>TotalCost: {{info.TotalCost/100/1000 | number:3}}ms </p>
+      <table st-table="senders" class="table table-striped">
+        <thead>
+          <th>Sender</th>
+          <th>PID</th>
+          <th>CTime</th>
+          <th>CMD</th>
+          <th>ETime</th>
+        </thead>
+        <tbody>
+          <tr ng-repeat="s in senders">
+            <td>{{s.Sender}}</td>
+            <td>{{s.Pid}}</td>
+            <td>{{s.CreateTime}}</td>
+            <td>{{s.Cmd}}</td>
+            <td>{{s.End}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
   </div>
 
   <div id="method_detail" class="row">

@@ -67,6 +67,11 @@ func newPcapSource(bus_addr string) (*pcapSource, error) {
 	go source.Run()
 	return source, nil
 }
+
+func (w *pcapSource) QuerySender(s string) (*SenderInfo, error) {
+	return w.intro.Query(s)
+}
+
 func (w *pcapSource) Run() error {
 	handle, err := pcap.OpenOffline(w.cachePath)
 	if err != nil {
@@ -188,5 +193,6 @@ func (s *pcapSource) send(rc *Record) {
 	if !rc.Valid() {
 		panic("Invalid Record")
 	}
+	s.intro.cacheCaller(rc.Sender)
 	s.queue <- rc
 }

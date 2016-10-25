@@ -4,6 +4,9 @@
         .factory('dapi', ['$http', function($http) {
             var dbus = "/dbus/api/"
             return {
+                QuerySenders: function(senders) {
+                    return get(dbus, "sender?name=" + senders)
+                },
                 BuildHeaderInfo: function() {
                     return function() {
                         return get(dbus, "/info")
@@ -47,7 +50,7 @@
                         return resp.data
                     },
                     function(err) {
-                        console.log("Errr on get ", url, err)
+                        console.log("Errr on get ", err)
                     }
                 );
             }

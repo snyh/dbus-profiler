@@ -45,12 +45,14 @@ func (rc Record) Valid() bool {
 
 type DatabaseSource interface {
 	Source() chan *Record
+	QuerySender(string) (*SenderInfo, error)
 }
 
 type Database struct {
 	sync.RWMutex
 	data map[string]RecordGroup
 
+	source          DatabaseSource
 	launchTimestamp time.Time
 }
 
@@ -61,8 +63,12 @@ func NewDatabase() *Database {
 	}
 }
 
+func (db *Database) QuerySender(s string) (*SenderInfo, error) {
+	return db.source.QuerySender(s)
+}
 func (db *Database) AddSource(source DatabaseSource) {
 	go func() {
+		db.source = source
 		for r := range source.Source() {
 			db.AddRecord(r)
 		}

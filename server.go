@@ -98,6 +98,19 @@ func (s *Server) RenderInterfaceDetail(w http.ResponseWriter, r *http.Request) {
 func (s *Server) Test(w http.ResponseWriter, r *http.Request) {
 	s.db.Test("org.freedesktop.DBus.Properties", w)
 }
+
+func (s *Server) SenderInfo(w http.ResponseWriter, r *http.Request) {
+	sender := r.URL.Query().Get("name")
+	if sender == "" {
+		w.WriteHeader(403)
+		return
+	}
+	err := s.db.RenderSender(sender, w)
+	if err != nil {
+		fmt.Fprintf(w, "ERR: %v for fetch %q\n", err, sender)
+	}
+}
+
 func (s *Server) Run(debug bool) error {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/p/#/", 301)
@@ -107,6 +120,7 @@ func (s *Server) Run(debug bool) error {
 	http.HandleFunc("/dbus/api/info", s.Info)
 	http.HandleFunc("/dbus/api/interface", s.RenderInterfaceDetail)
 	http.HandleFunc("/dbus/api/test", s.Test)
+	http.HandleFunc("/dbus/api/sender", s.SenderInfo)
 	http.HandleFunc("/config", s.Config)
 	return http.Serve(s.listener, nil)
 }

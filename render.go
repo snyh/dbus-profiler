@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -34,6 +35,7 @@ type RecordDetail struct {
 	TotalCost time.Duration
 	TotalCall int
 
+	Sender   []string
 	Method   map[string]CallUsageSummary
 	Signal   map[string]CallUsageSummary
 	Property map[string]CallUsageSummary
@@ -61,7 +63,11 @@ func (rg RecordGroup) Detail() RecordDetail {
 	scache := make(map[string][]*Record)
 	pcache := make(map[string][]*Record)
 
+	sender := make(map[string]struct{})
+
 	for _, rc := range rg.rcs {
+		sender[rc.Sender] = struct{}{}
+
 		switch rc.Type {
 		case TypeMethodCall:
 			mcache[rc.Name] = append(mcache[rc.Name], rc)
@@ -90,6 +96,10 @@ func (rg RecordGroup) Detail() RecordDetail {
 	for n, v := range pcache {
 		ret.Property[n] = calcUsage(v)
 	}
+	for n := range sender {
+		ret.Sender = append(ret.Sender, n)
+	}
+	sort.Strings(ret.Sender)
 	return ret
 }
 
@@ -97,6 +107,7 @@ type RecordGroup struct {
 	Ifc       string
 	TotalCost time.Duration
 	TotalCall int
+	Sender    []string
 	rcs       []*Record
 }
 
@@ -188,6 +199,18 @@ func (db *Database) RenderInterfaceDetail(name string, w io.Writer) error {
 	return json.NewEncoder(w).Encode(v.Detail())
 }
 
+func (db *Database) RenderSender(s string, w io.Writer) error {
+	ss := strings.Split(s, ",")
+	var ret = make([]*SenderInfo, 0)
+	for _, name := range ss {
+		info, err := db.QuerySender(name)
+		if err != nil {
+			return err
+		}
+		ret = append(ret, info)
+	}
+	return json.NewEncoder(w).Encode(ret)
+}
 func (db *Database) Test(name string, w io.Writer) {
 	var i interface{} = db.data[name].rcs
 	json.NewEncoder(w).Encode(i)

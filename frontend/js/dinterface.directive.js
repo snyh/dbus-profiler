@@ -12,7 +12,7 @@
                 fetchFn: '<'
             },
             templateUrl: "templates/dinterface.directive.html",
-            controller: ['$scope', '$element', '$attrs', ic]
+            controller: ['$scope', '$element', '$attrs', 'dapi', ic]
         })
         .component('dMethod', {
             bindings: {
@@ -53,8 +53,19 @@
             }]
         })
 
-    function ic($scope, $element, $attrs) {
+    function ic($scope, $element, $attrs, dapi) {
         var fetchFn = $scope.$ctrl.fetchFn
+
+        $scope.$watch("info.Sender", function(newVal, oldVal) {
+            if (newVal && !angular.equals(newVal, oldVal)) {
+                console.log("new:",newVal, "Old:", oldVal, angular.equals(newVal, oldVal))
+                dapi.QuerySenders(newVal).then(function(d) {
+                    $scope.senders = d
+                })
+            }
+        })
+
+
         $scope.update = function() {
             fetchFn().then(function(data) {
                 var rows = []
@@ -69,7 +80,7 @@
                 })
 
                 $scope.rows = rows;
-                $scope.info = data
+                $scope.info = data;
             });
         }
         setInterval($scope.update, 1000)
