@@ -2,16 +2,17 @@
     'use strict';
     angular.module('dbus-profiler')
         .factory('dapi', ['$http', function($http) {
+            var dbus = "/dbus/api/"
             return {
                 BuildHeaderInfo: function() {
                     return function() {
-                        return Get("/info")
+                        return get(dbus, "/info")
                     }
                 },
 
                 BuildIfcInfo: function(name) {
                     return function() {
-                        return Get("interface?name="+name)
+                        return get(dbus, "interface?name="+name)
                     }
                 },
                 BuildMethodInfo: function(ifc, type, name) {
@@ -19,10 +20,28 @@
                         return MethodInfos(ifc, type, name)
                     }
                 },
-                IfcInfos: ListIfcInfos
+
+                ConfigInfo: function() {
+                    return $http.get("/config").then(function(resp) {
+                        return resp.data.Enable
+                    });
+                },
+
+                IfcInfos: ListIfcInfos,
+
+                EnableAutoStart : function(v) {
+                    var p = "f"
+                    if (v) {
+                        p = "t"
+                    }
+                    return $http.get("/config?enable=" + p).then(function(d) {
+                    }, function(err) {
+                        console.log(err)
+                    })
+                }
             }
-            function Get(name) {
-                var base = "/dbus/api/"
+
+            function get(base, name) {
                 return $http.get(base + '/' + name).then(
                     function(resp) {
                         return resp.data
@@ -33,7 +52,7 @@
                 );
             }
             function ListIfcInfos() {
-                return Get("/main?1s")
+                return get(dbus,"/main?1s")
                     .then(function(data) {
                         return data.map(function(d) {
                             return {
@@ -44,7 +63,7 @@
                     })
             }
             function MethodInfos(ifcName, type, methodName) {
-                return Get("interface?name="+ifcName).then(function(data) {
+                return get(dbus, "interface?name="+ifcName).then(function(data) {
                     var v
                     switch (type) {
                     case "M":

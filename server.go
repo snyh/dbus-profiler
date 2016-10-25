@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/snyh/dbus-profiler/frontend"
 	"net"
@@ -15,6 +16,7 @@ type Server struct {
 	db       *Database
 	StartAt  time.Time
 	listener net.Listener
+	c        Config
 }
 
 func NewServer(db *Database, addr string) *Server {
@@ -28,6 +30,7 @@ func NewServer(db *Database, addr string) *Server {
 	return &Server{
 		db:       db,
 		listener: l,
+		c:        NewConfig(),
 	}
 }
 
@@ -104,7 +107,28 @@ func (s *Server) Run(debug bool) error {
 	http.HandleFunc("/dbus/api/info", s.Info)
 	http.HandleFunc("/dbus/api/interface", s.RenderInterfaceDetail)
 	http.HandleFunc("/dbus/api/test", s.Test)
+	http.HandleFunc("/config", s.Config)
 	return http.Serve(s.listener, nil)
+}
+
+func (s *Server) Config(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	var err error
+	switch q.Get("enable") {
+	case "t":
+		err = s.c.Enable(true)
+	case "f":
+		err = s.c.Enable(false)
+	default:
+	}
+	ww := json.NewEncoder(w)
+
+	if err != nil {
+		w.WriteHeader(505)
+		ww.Encode(err)
+		return
+	}
+	ww.Encode(struct{ Enable bool }{s.c.CheckEnable()})
 }
 
 func (s *Server) OpenBrowser(auto bool) {
