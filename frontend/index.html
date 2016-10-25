@@ -4,18 +4,23 @@
     <link rel="stylesheet" href="./css/lib/bootstrap.min.css">
     <title>dbus-profiler</title>
   </head>
-  
-  <body>
-    <div class="container" ng-controller="mainCtrl">
-      <d-header> </d-header>
-      <d-summary> </d-summary>
-      <d-interface ifc-name="{{ifcName}}"> </d-interface>
-    </div>
 
+  <body class="container">
+    <ui class="nav nav-pills">
+      <li>
+        <a ui-sref-active="active" ui-sref="home">Chart</a>
+      </li>
+    </ui>
+
+    <ui-view>
+
+    </ui-view>
+    <d-header></d-header>
 
     <script src = "./js/lib/angular.js"> </script>
+    <script src = "./js/lib/angular-ui-router.js"></script>
     <script src = "./js/lib/angular-smart-table.js"></script>
-    
+
     <script src = "./js/lib/d3.min.js"></script>
     <script src = "./js/lib/d3-shape.min.js"></script>
     <script src = "./js/lib/string-format.js"></script>

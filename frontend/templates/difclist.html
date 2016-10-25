@@ -1,0 +1,31 @@
+
+<div class="d-ifc-list-container">
+    <style>
+     .d-ifc-list-container {
+         display: flex;
+         flex-direction: row;
+     }
+     .d-ifc-list-container
+    </style>
+
+    <div>
+        <table st-table="rows" class="table table-striped" st-safe-src="$ctrl.infos">
+            <thead>
+                <tr>
+                    <th st-sort="name">Name</th>
+                    <th st-sort="cost">Cost</th>
+                </tr>
+            </thead>
+                <tr ng-repeat="row in rows">
+                    <td> <a ui-sref="ifcs.detail({ifcName:row.name})">{{row.name}}</a> </td>
+                    <td> {{row.cost / 1000 / 1000 | number:1}}ms </td>
+                </tr>
+        </table>
+    </div>
+
+    <div>
+        <ui-view>
+        </ui-view>
+    </div>
+</div>
+

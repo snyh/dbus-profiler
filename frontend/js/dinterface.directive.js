@@ -1,53 +1,44 @@
 (function(){
     'use strict';
     angular.module('dbus-profiler')
-        .directive('ifcName', function() {
-            return {
-                controller: ['$scope', function($scope) {}]
-            }
+        .component('dIfcList', {
+            bindings: {
+                infos: '<'
+            },
+            templateUrl: "templates/difclist.html"
         })
-        .directive('dInterface', function() {
-            return {
-                replace: true,
-                require: '^ifcName',
-                scope: {
-                    ifcName: '@'
-                },
-                restrict: 'EA',
-                templateUrl: "templates/dinterface.directive.html",
-                controller: ['$scope', 'dapi', ic],
-                link: link,
-            }
-        });
-
-    function link(scope, iElement, iAttrs) {
-        setInterval(scope.update, 1000)
-        scope.update()
-
-        scope.$watch('ifcName', function(newVal) {
-            if (newVal)
-                scope.getData(newVal);
+        .component('dInterface', {
+            bindings: {
+                fetchFn: '<'
+            },
+            templateUrl: "templates/dinterface.directive.html",
+            controller: ['$scope', '$element', '$attrs', ic]
         })
-        scope.$watch('detailName', function(newVal) {
-            if (scope.info && newVal) {
-                var v = scope.info.Method[newVal]
-                var root = iElement[0].querySelector(".dinterface_chart_container")
-                root.innerHTML = ""
-                draw_detail(root, v.Cost.map(function(d) {return d / 1000 /1000;}), iAttrs)
-            }
-        })
-    }
+        .component('dMethod', {
+            bindings: {
+                fetchFn: '<'
+            },
+            templateUrl: "templates/dmethod.html",
+            controller: ['$scope', '$element', '$attrs', function($scope, $element, $attrs) {
+                var fetchFn = $scope.$ctrl.fetchFn
 
-    function ic($scope, dapi) {
-        $scope.switchM = function(n) {
-            $scope.detailName = n
-        }
+                var root = $element[0]
+                var update = function() {
+                    fetchFn().then(function(d) {
+                        root.innerHTML = ""
+                        draw_detail(root, d.Value.Cost, $attrs)
+                    })
+                }
+                update()
+                setInterval(update, 1000)
+            }]
+        })
+
+    function ic($scope, $element, $attrs) {
+        var fetchFn = $scope.$ctrl.fetchFn
+        console.log("HHH:", fetchFn)
         $scope.update = function() {
-            $scope.getData($scope.ifcName || "org.freedesktop.DBus")
-        }
-
-        $scope.getData = function(name) {
-            dapi.get("/interface?name="+name, function(data) {
+            fetchFn().then(function(data) {
                 var rows = []
                 angular.forEach(data.Method, function(v, name) {
                     rows.push({name:name, type:"M", call: v.Total, cost: v.Cost.reduce(function(a, i) { return a + i})});
@@ -63,9 +54,11 @@
                 $scope.info = data
             });
         }
+        setInterval($scope.update, 1000)
+        $scope.update()
     }
 
-   function draw_detail(root, data, opts)
+    function draw_detail(root, data, opts)
     {
         var width = opts.width || 200,
             height = opts.height || 250,

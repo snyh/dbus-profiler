@@ -1,21 +1,18 @@
 (function() {
     'use strick';
     angular.module('dbus-profiler')
-        .directive('dHeader', function() {
-            return {
-                restrict: 'EA',
-                templateUrl: "templates/dheader.directive.html",
-                controller: ['$scope', 'dapi', cc],
-            }
+        .component('dHeader', {
+            templateUrl: "templates/dheader.directive.html",
+            controller: ['$scope', 'dapi', function($scope, dapi) {
+                var fetchFn = dapi.BuildHeaderInfo()
 
-            function cc($scope, dapi) {
-                $scope.update = function() {
-                    dapi.get("/info", function(data){
-                        $scope.info = data;
+                var update = function() {
+                    fetchFn().then(function(d) {
+                        $scope.info = d
                     })
                 }
-                setInterval($scope.update, 1000);
-                $scope.update()
-            }
-        });
+                setInterval(update, 1000);
+                update();
+            }]
+        })
 })()

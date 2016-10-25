@@ -1,15 +1,12 @@
 (function() {
     'use strict';
     angular.module('dbus-profiler')
-        .directive('dSummary', function() {
-            return {
-                restrict: 'EA',
-                link: link,
-                controller: ['$scope', 'dapi', cc],
-            }
+        .component('dSummary', {
+            controller: ['$scope', '$element', '$attrs', cc],
+            template: '<ui-view></ui-view> <div id=chart></div>'
         });
 
-    function link(scope, iElement, iAttrs) {
+    function cc(scope, iElement, iAttrs) {
         scope.$watch("data", function(newVal) {
             if (newVal) {
                 var root = iElement[0]
@@ -18,9 +15,7 @@
             }
         })
         window.onresize = scope.tick;
-    }
 
-    function cc(scope) {
         scope.tick = function() {
             d3.json(format("/dbus/api/main?top={}&since={}s", MaxServer, MaxSecond), function(error, data) {
                 if (error)
@@ -65,11 +60,10 @@
 
         update.exit().remove();
 
-        var enter = update.enter().append('g')
+        var enter = update.enter()
+            .append('a').attr('href', function(d) { return "/static/#/ifcs/" + d.Ifc })
+            .append('g')
             .classed('item', true)
-            .on("click", function(d, i, ele) {
-                    scope.switchIfc(d.Ifc)
-            })
 
         enter.append('rect')
             .attr('height', iHeight/2)
