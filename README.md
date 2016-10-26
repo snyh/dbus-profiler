@@ -41,6 +41,7 @@ go get -v github.com/snyh/dbus-profiler
 
 TODO
 
+- [ ] Remove the dependencies of gopacket&libpcap, directly parsing dbus-monitor --binary
 - [ ] Caller process information recording and rendering
 - [ ] Better d3.js rendering
 - [ ] dependencies parsing and live rendering
