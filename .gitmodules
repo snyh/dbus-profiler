@@ -7,3 +7,6 @@
 [submodule "vendor/pkg.deepin.io/lib"]
 	path = vendor/pkg.deepin.io/lib
 	url = https://github.com/linuxdeepin/go-lib
+[submodule "vendor/github.com/shirou/gopsutil"]
+	path = vendor/github.com/shirou/gopsutil
+	url = https://github.com/shirou/gopsutil
